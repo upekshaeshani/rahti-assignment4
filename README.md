@@ -86,15 +86,15 @@ The application images are published on Docker Hub:
 * `upeksha94/lemp-backend`
 * `upeksha94/lemp-frontend`
 
-Frontend versions used during the Rahti deployment included:
+Frontend image versions used during development and deployment included:
 
 ```text
 upeksha94/lemp-frontend:1.0.0
 upeksha94/lemp-frontend:1.0.1
-upeksha94/lemp-frontend:1.0.2
+upeksha94/lemp-frontend:1.0.3
 ```
 
-The 1.0.1 image contains the OpenShift-compatible Nginx configuration. The 1.0.2 image contains the final application documentation displayed on the webpage.
+The 1.0.1 image contains the OpenShift-compatible Nginx configuration. The 1.0.3 image contains the final application documentation displayed on the webpage.
 
 ## 5. Rahti deployment
 
@@ -245,17 +245,17 @@ OpenShift created a new ReplicaSet for version 1.0.1. The new frontend Pod becam
 The final documentation version was later published as:
 
 ```text
-upeksha94/lemp-frontend:1.0.2
+upeksha94/lemp-frontend:1.0.3
 ```
 
 and successfully rolled out using:
 
 ```cmd
-oc set image deployment/frontend frontend=upeksha94/lemp-frontend:1.0.2
+oc set image deployment/frontend frontend=upeksha94/lemp-frontend:1.0.3
 oc rollout status deployment/frontend
 ```
 
-The final running frontend Pod uses version 1.0.2.
+The final running frontend Pod uses version 1.0.3.
 
 ## 11. Problems and solutions
 
