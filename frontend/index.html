@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>3-Tier Rahti Application</title>
+  </head>
+
+  <body>
+    <h1>3-Tier Rahti Application</h1>
+
+    <p>Frontend is running!</p>
+
+    <h2>Database Information</h2>
+
+    <p>
+      MySQL server time:
+      <strong id="serverTime">Loading...</strong>
+    </p>
+
+    <p>
+      Page views:
+      <strong id="pageViews">Loading...</strong>
+    </p>
+
+    <button onclick="recordView()">Record Page View</button>
+    <button onclick="loadData()">Refresh</button>
+
+    <p id="result"></p>
+
+    <hr />
+
+    <h2>Application Documentation</h2>
+
+    <h3>Application description</h3>
+    <p>
+      This is a three-tier web application consisting of an Nginx frontend, a
+      Flask backend and a MySQL database.
+    </p>
+
+    <h3>Architecture</h3>
+    <p>
+      The frontend communicates with the Flask backend through a REST API. The
+      backend communicates with MySQL through an internal service. Only the
+      frontend is publicly accessible.
+    </p>
+
+    <h3>End-to-end communication</h3>
+    <p>
+      The application retrieves the MySQL server time and page-view count
+      through the backend API. The page-view button writes data to MySQL.
+    </p>
+
+    <h3>Database persistence</h3>
+    <p>
+      Before the experiment, the application reported page_views = 1. The MySQL
+      Pod was deleted while the MySQL Deployment and persistent volume claim
+      (mysql-pvc) were kept. OpenShift created a replacement MySQL Pod
+      automatically. After the replacement, the application still reported
+      page_views = 1. This demonstrates that the database data survived the Pod
+      replacement because it was stored on persistent storage.
+    </p>
+
+    <h3>Pod recovery experiment</h3>
+    <p>
+      The backend Pod backend-7884df4c95-jnkcs was deleted manually. The backend
+      Deployment automatically created a replacement Pod,
+      backend-7884df4c95-dft7v. The replacement Pod reached Running and Ready
+      status. The public API continued to return data successfully,
+      demonstrating automatic Pod recovery.
+    </p>
+
+    <h3>Scaling experiment</h3>
+    <p>
+      The backend Deployment was scaled from 1 to 3 replicas. OpenShift created
+      three running backend Pods. This demonstrated horizontal scaling of the
+      backend. After the experiment, the Deployment was scaled back to 1 replica
+      to conserve resources.
+    </p>
+
+    <h3>Application update</h3>
+    <p>
+      The frontend was updated from image version 1.0.0 to 1.0.1. OpenShift
+      created a new ReplicaSet using upeksha94/lemp-frontend:1.0.1. The new
+      frontend Pod became Ready, while the old 1.0.0 ReplicaSet was scaled down
+      to zero Pods. The final running frontend Pod uses version 1.0.3.
+    </p>
+
+    <h3>Problems and solutions</h3>
+    <p>
+      The main Rahti deployment problem was that the default Nginx configuration
+      attempted to write temporary files and its PID file in locations that were
+      not writable under OpenShift's restricted container permissions. The
+      frontend container therefore failed to start. The solution was to
+      configure Nginx to use /tmp for its PID and temporary files and to listen
+      on port 8080 instead of the privileged port 80. The Service and Route were
+      updated to use port 8080.
+    </p>
+
+    <h3>Docker Compose + cPouta vs Rahti</h3>
+    <p>
+      With Docker Compose on cPouta, the application was managed as a group of
+      containers on one virtual machine. Docker Compose handled container
+      startup and the Compose network provided service-name communication
+      between the frontend, backend and database. Public access was provided by
+      exposing the frontend port through the cPouta security group.
+    </p>
+    <p>
+      With Rahti, the application is managed as Kubernetes/OpenShift resources
+      instead of individual containers on a virtual machine. Deployments manage
+      Pod creation, replacement and scaling, Services provide stable internal
+      networking between tiers, the PVC provides persistent database storage,
+      and an OpenShift Route provides public access to the frontend. The backend
+      and database remain internal Services and are not exposed through a public
+      Route.
+    </p>
+    <p>
+      The main operational change is therefore from managing containers on a VM
+      with Docker Compose to managing declarative application resources on an
+      OpenShift cluster. Rahti provides automatic Pod recovery and scaling
+      through Deployments, while persistent storage is managed separately
+      through a PVC.
+    </p>
+
+    <script>
+      async function loadData() {
+        const serverTime = document.getElementById("serverTime");
+        const pageViews = document.getElementById("pageViews");
+        const result = document.getElementById("result");
+
+        try {
+          const response = await fetch("/api");
+          const data = await response.json();
+
+          serverTime.textContent = data.mysql_server_time;
+          pageViews.textContent = data.page_views;
+          result.textContent = "Backend and database connection successful.";
+        } catch (error) {
+          result.textContent = "Error: " + error;
+        }
+      }
+
+      async function recordView() {
+        const result = document.getElementById("result");
+
+        try {
+          const response = await fetch("/api/view", {
+            method: "POST",
+          });
+
+          const data = await response.json();
+
+          document.getElementById("pageViews").textContent = data.page_views;
+
+          result.textContent = "Page view was written to MySQL successfully.";
+        } catch (error) {
+          result.textContent = "Error: " + error;
+        }
+      }
+
+      loadData();
+    </script>
+  </body>
+</html>
