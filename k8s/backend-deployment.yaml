@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: upeksha94/lemp-backend:1.0.1
+          image: upeksha94/lemp-backend:1.0.2
           ports:
             - containerPort: 8000
           env:
@@ -38,3 +38,7 @@ spec:
                 secretKeyRef:
                   name: mysql-secret
                   key: DB_PASSWORD
+            - name: REDIS_HOST
+              value: redis
+            - name: REDIS_PORT
+              value: "6379"
