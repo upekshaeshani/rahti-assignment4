@@ -1,5 +1,11 @@
 # 3-Tier Application with Docker Compose and Rahti
 
+## Week 5 Assignment
+
+You can view the complete Week 5 assignment here:
+
+[📄 View Week 5 Assignment PDF](docs/week5-assignment.pdf)
+
 ## 1. Application description
 
 This project is a three-tier web application consisting of:
