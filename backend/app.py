@@ -1,11 +1,38 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 import os
 import json
+import time
+import logging
 import mysql.connector
 import redis
 
 app = Flask(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(message)s"
+)
 
+logger = logging.getLogger(__name__)
+
+
+@app.before_request
+def start_timer():
+    request.start_time = time.time()
+
+
+@app.after_request
+def log_request(response):
+    duration = time.time() - request.start_time
+
+    logger.info(
+        "request path=%s method=%s status=%s duration_ms=%.2f",
+        request.path,
+        request.method,
+        response.status_code,
+        duration * 1000,
+    )
+
+    return response
 DB_HOST = os.getenv("DB_HOST", "db")
 DB_USER = os.getenv("DB_USER", "appuser")
 DB_PASSWORD = os.environ["DB_PASSWORD"]
@@ -33,6 +60,21 @@ def get_connection():
 @app.get("/api/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/healthz")
+def healthz():
+    return {"status": "ok"}
+
+
+@app.get("/readyz")
+def readyz():
+    try:
+        conn = get_connection()
+        conn.close()
+        return {"status": "ready"}, 200
+    except Exception:
+        return {"status": "not ready"}, 503
 
 
 @app.get("/api")
