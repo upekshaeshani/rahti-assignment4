@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: upeksha94/lemp-backend:1.0.2
+          image: upeksha94/lemp-backend:1.0.3
           ports:
             - containerPort: 8000
 
