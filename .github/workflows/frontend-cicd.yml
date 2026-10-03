@@ -1,0 +1,49 @@
+name: Frontend CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build frontend image
+        run: |
+          docker build \
+            -t upeksha94/lemp-frontend:${{ github.sha }} \
+            -f frontend/Dockerfile .
+
+      - name: Push frontend image
+        run: |
+          docker push upeksha94/lemp-frontend:${{ github.sha }}
+
+      - name: Set up OpenShift CLI
+        uses: redhat-actions/oc-installer@v1
+
+      - name: Log in to Rahti
+        run: |
+          oc login \
+            --token="${{ secrets.RAHTI_TOKEN }}" \
+            --server="${{ secrets.RAHTI_SERVER }}"
+
+      - name: Deploy frontend
+        run: |
+          oc project mywebapp-upeksha
+          oc set image deployment/frontend \
+            frontend=upeksha94/lemp-frontend:${{ github.sha }}
+
+      - name: Wait for deployment
+        run: |
+          oc rollout status deployment/frontend --timeout=180s
