@@ -1,0 +1,53 @@
+name: Backend CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build backend image
+        run: |
+          docker build \
+            -t upeksha94/lemp-backend:${{ github.sha }} \
+            -f backend/Dockerfile .
+
+      - name: Push backend image
+        run: |
+          docker push upeksha94/lemp-backend:${{ github.sha }}
+
+      - name: Set up OpenShift CLI
+        uses: redhat-actions/oc-installer@v1
+
+      - name: Log in to Rahti
+        run: |
+          oc login \
+            --token="${{ secrets.RAHTI_TOKEN }}" \
+            --server="${{ secrets.RAHTI_SERVER }}"
+
+      - name: Deploy backend
+        run: |
+          oc project mywebapp-upeksha
+          oc set image deployment/backend \
+            backend=upeksha94/lemp-backend:${{ github.sha }}
+
+      - name: Wait for deployment
+        run: |
+          oc rollout status deployment/backend --timeout=180s
