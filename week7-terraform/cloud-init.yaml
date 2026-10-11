@@ -1,0 +1,26 @@
+#cloud-config
+
+package_update: true
+
+packages:
+  - apache2
+
+write_files:
+  - path: /var/www/html/index.html
+    permissions: "0644"
+    content: |
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Week 7 IaC</title>
+      </head>
+      <body>
+        <h1>Hello from my OpenTofu VM!</h1>
+        <p>My name is Upeksha.</p>
+        <p>This web server was created automatically using OpenTofu and cloud-init.</p>
+      </body>
+      </html>
+
+runcmd:
+  - systemctl enable apache2
+  - systemctl restart apache2

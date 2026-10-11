@@ -1,0 +1,22 @@
+
+# OpenTofu state and plans
+*.tfstate
+*.tfstate.*
+*.tfplan
+.terraform/
+
+# Personal variables and credentials
+*.tfvars
+*.tfvars.json
+
+# OpenStack credentials
+*.openrc
+openrc*
+clouds.yaml
+
+# SSH keys
+*.pem
+id_rsa
+id_ed25519
+week7-key
+week7-key.pub
