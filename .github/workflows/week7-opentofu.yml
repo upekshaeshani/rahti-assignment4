@@ -1,0 +1,45 @@
+
+name: Week 7 OpenTofu Checks
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "week7-terraform/**"
+      - ".github/workflows/week7-opentofu.yml"
+  pull_request:
+    paths:
+      - "week7-terraform/**"
+      - ".github/workflows/week7-opentofu.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Format and validate OpenTofu
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: week7-terraform
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install OpenTofu
+        uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: "1.13.0"
+
+      - name: Check formatting
+        run: tofu fmt -check -recursive
+
+      - name: Initialize providers
+        run: tofu init -backend=false
+
+      - name: Validate configuration
+        run: tofu validate
